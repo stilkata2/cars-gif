@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="bg">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Prolog коли с различни правила и GIF</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      max-width: 700px;
+      margin: 30px auto;
+      background: #f9f9f9;
+      color: #333;
+      padding: 20px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      border-radius: 10px;
+      text-align: center;
+    }
+    textarea {
+      width: 90%;
+      max-width: 600px;
+      height: 120px;
+      font-family: monospace;
+      font-size: 16px;
+      margin-top: 10px;
+      border-radius: 6px;
+      border: 2px solid #007acc;
+      padding: 8px;
+      resize: vertical;
+    }
+    button {
+      margin-top: 15px;
+      padding: 10px 25px;
+      font-size: 18px;
+      background-color: #007acc;
+      border: none;
+      color: white;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    button:hover {
+      background-color: #005f99;
+    }
+    #result {
+      margin-top: 20px;
+      font-size: 18px;
+      min-height: 30px;
+      font-weight: bold;
+      color: #004a99;
+    }
+    .car-container {
+      margin-top: 30px;
+      min-height: 160px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: #d0e8ff;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #a0c4ff;
+    }
+    .car-gif {
+      max-width: 220px;
+      border-radius: 12px;
+      box-shadow: 0 0 10px #005f99;
+    }
+  </style>
+</head>
+<body>
+  <h1>Prolog приложение за коли с GIF анимации</h1>
+
+  <p class="instructions">
+    Въведете Prolog заявка за коли, типове, скорост и др.<br>
+    <strong>Примери:</strong><br>
+    <code>is_fast(X).</code><br>
+    <code>is_electric(X).</code><br>
+    <code>is_suv(X).</code>
+  </p>
+
+  <textarea id="prolog-input">
+% Примери на заявки:
+is_fast(X).
+is_electric(X).
+is_suv(X).
+  </textarea><br />
+  <button onclick="runProlog()">Изпълни</button>
+
+  <div id="result"></div>
+  <div class="car-container" id="car-animation"></div>
+
+  <script src="https://unpkg.com/tau-prolog"></script>
+  <script>
+    const session = pl.create();
+
+    // Prolog база с коли и правила
+    const knowledge = `
+car(tesla_model_s).
+car(ford_mustang).
+car(bmw_x5).
+car(toyota_prius).
+car(lamborghini_aventador).
+
+electric(tesla_model_s).
+electric(toyota_prius).
+
+fast(ford_mustang).
+fast(lamborghini_aventador).
+
+suv(bmw_x5).
+
+% Правила
+is_fast(X) :- fast(X).
+is_electric(X) :- electric(X).
+is_suv(X) :- suv(X).
+    `;
+
+    session.consult(knowledge);
+
+    const carAnimations = {
+      tesla_model_s: '<img src="https://media.giphy.com/media/kY8ox3KFJ2R84/giphy.gif" class="car-gif" alt="Tesla Model S" />',
+      ford_mustang: '<img src="https://media.giphy.com/media/3o7TKVbJxS6YgV7ZZi/giphy.gif" class="car-gif" alt="Ford Mustang" />',
+      bmw_x5: '<img src="https://media.giphy.com/media/euTzWkC6Hso3u/giphy.gif" class="car-gif" alt="BMW X5" />',
+      toyota_prius: '<img src="https://media.giphy.com/media/3o6ZtfXZQf9q2iAqz6/giphy.gif" class="car-gif" alt="Toyota Prius" />',
+      lamborghini_aventador: '<img src="https://media.giphy.com/media/yFQ0ywscgobJK/giphy.gif" class="car-gif" alt="Lamborghini Aventador" />'
+    };
+
+    function runProlog() {
+      const input = document.getElementById("prolog-input").value;
+      const resultDiv = document.getElementById("result");
+      const animDiv = document.getElementById("car-animation");
+
+      resultDiv.innerHTML = "";
+      animDiv.innerHTML = "";
+
+      session.query(input);
+      session.answers(answer => {
+        if(answer === false) {
+          resultDiv.innerHTML += `<p>Няма повече резултати.</p>`;
+          return;
+        }
+        const str = pl.format_answer(answer);
+        if (str === "false.") {
+          resultDiv.innerHTML = "<p>Няма резултати за тази заявка.</p>";
+          return;
+        }
+        resultDiv.innerHTML += `<p>${str}</p>`;
+
+        const match = str.match(/X = (\w+)/);
+        if (match) {
+          const car = match[1];
+          if (carAnimations[car]) {
+            animDiv.innerHTML = carAnimations[car];
+          } else {
+            animDiv.innerHTML = "<p>Няма GIF за този автомобил.</p>";
+          }
+        }
+      });
+    }
+  </script>
+
+</body>
+</html>
